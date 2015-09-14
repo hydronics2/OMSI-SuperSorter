@@ -14,8 +14,9 @@
 //  Revision History:                                               //
 //  1.3  Working version                                            //
 //  1.4  Added Audio Output                                         //
-//  1.5  Simplified communication protocol with Slaves
-//  1.6  July 2, 2015 chaged out uMP3 player with Sparkfun WAV trigger and increased the delay HIGH for trigger from 1ms to 50ms.
+//  1.5  Simplified communication protocol with Slaves (as found)
+//  1.6  7/2/15 by thomas hudson chaged out uMP3 player with Sparkfun WAV trigger and increased the delay HIGH for trigger from 1ms to 50ms.
+//  1.7  9/14/15 added a exit to the while loop  did some final configuration for the new mp3 player on pin 32.
 //////////////////////////////////////////////////////////////////////
 
 #include <SoftwareSerial.h>
@@ -30,7 +31,7 @@ const int  MOSI_PIN[5] = {3, 5, 7, 9, 11};  // MOSI Master Out Slave In pins
 const int  SLAVE_DELAY = 50;                // time delay for slave response, in milliseconds
 
 // set up audio output triggers (R1.4)
-const int  audioTrigger[2]    = {32, 33};   // rMP3 input triggers
+const int  audioTrigger[2]    = {32, 33};   // rMP3 input triggers  .... only pin 32 is used to the one audio file
 
 // set up digital output displays
 const int  displayStrobe      = 36;
@@ -165,20 +166,22 @@ void setup() {
 void loop () {
   // check the start/stop buttons
   queryButtons();
-  if(speed == pwmSTOP) playAudioFile(1);    ////?? start blank audio file
+  //if(speed == pwmSTOP) playAudioFile(1);    ////?? start blank audio file
   // if we are running . . .
   while (runFlag) {
     // check the start/stop buttons
     queryButtons();
-    if(speed == pwmSTOP) playAudioFile(1);  ////?? start blank audio file
+    //if(speed == pwmSTOP) playAudioFile(1);  ////?? start blank audio file
 
     // query the 5 slave devices
     queryBins();
-
+    
+    
     // STOP if time expired
     if(expireTime < millis()) {
       remainTime = 0ul;
       endOfRun(0);
+      digitalWrite(audioTrigger[0], HIGH);   // start audio file
       break;
     }
 
@@ -243,7 +246,6 @@ void setSpeed(int gear) {
   switch (gear) {
     case 0:                                   // if STOP
       speed = pwmSTOP;
-      playAudioFile(1);                       // start blank audio file for tacit
       // restore previous results
       updateDisplays(remainTime, score);
       lastTime = remainTime;
@@ -330,7 +332,13 @@ void queryBins() {
       }
       if (COMM_DEBUG2) Serial.println("1 MISO HIGH (data ready)");
       // process data as needed
-      while (digitalRead(MISO_PIN[i]) == HIGH) {}     // wait for ACK from slave
+      int j = 0;
+      while (digitalRead(MISO_PIN[i]) == HIGH || j < 500) {  //added OR j > 500 to exit the while loop.
+      j++;  // wait for ACK from slave or break after some 500 times
+      }
+      if (j > 499) {
+        Serial.println("exited while loop waiting for slave response");}  //added for dibugging
+      j = 0;     
       if (COMM_DEBUG2) Serial.println("2 MISO LOW (ACK)");
       digitalWrite(MOSI_PIN[i], LOW);                 // send ACK to slave
       score++;
@@ -442,8 +450,9 @@ void  updateButtonLEDs(byte val) {
 
 void  playAudioFile(byte audioFile) {
   // set associated pin LOW to start audio output
+  Serial.println("auido triggered");
   digitalWrite(audioTrigger[audioFile], LOW);   // start audio file
-  delay(1);                      //changed from 1ms to 50ms to trigger Sparkfun WAV trigger board.
+  delay(50);                      //changed from 1ms to 50ms to trigger Sparkfun WAV trigger board.
   digitalWrite(audioTrigger[audioFile], HIGH);  // clear trigger
 
 }
