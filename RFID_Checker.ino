@@ -27,7 +27,7 @@
 //  1.4  Working Version                                            //
 //  1.5  Simplified communication protocol with Master 
 //  1.6  9/14/2015 Thomas Hudson. added RFID tag information describing the new tags
-
+//  1.7  9/16/2015 thomas hudson. took out second while loop when communicating with Master
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -160,10 +160,7 @@ switch (BIN_NO) {
       if (DEBUG) printScore();
       sendResults(good);
     }else 
-    //if(compareTag(tag, tag_2a) || compareTag(tag, tag_2b) || compareTag(tag, tag_2c) || compareTag(tag, tag_2d) || compareTag(tag, tag_2e) 
-     //|| compareTag(tag, tag_3a) || compareTag(tag, tag_3b) || compareTag(tag, tag_3c) || compareTag(tag, tag_3d) || compareTag(tag, tag_3e) 
-      //|| compareTag(tag, tag_4a) || compareTag(tag, tag_4b) || compareTag(tag, tag_4c) || compareTag(tag, tag_4d) || compareTag(tag, tag_4e) 
-      //|| compareTag(tag, tag_5a) || compareTag(tag, tag_5b) || compareTag(tag, tag_5c) || compareTag(tag, tag_5d) || compareTag(tag, tag_5e)) 
+   
       { // if wrong, do this
       turnLedRed();
       bad++;
@@ -185,10 +182,6 @@ switch (BIN_NO) {
       if (DEBUG) printScore();
       sendResults(good);
     }else 
-    //if(compareTag(tag, tag_1a) || compareTag(tag, tag_1b) || compareTag(tag, tag_1c) || compareTag(tag, tag_1d) || compareTag(tag, tag_1e) 
-    //  || compareTag(tag, tag_3a) || compareTag(tag, tag_3b) || compareTag(tag, tag_3c) || compareTag(tag, tag_3d) || compareTag(tag, tag_3e) 
-    //  || compareTag(tag, tag_4a) || compareTag(tag, tag_4b) || compareTag(tag, tag_4c) || compareTag(tag, tag_4d) || compareTag(tag, tag_4e) 
-    //  || compareTag(tag, tag_5a) || compareTag(tag, tag_5b) || compareTag(tag, tag_5c) || compareTag(tag, tag_5d) || compareTag(tag, tag_5e)) 
     {  // if wrong, do this
       turnLedRed();
       bad++;
@@ -209,10 +202,6 @@ switch (BIN_NO) {
       if (DEBUG) printScore();
       sendResults(good);
     }else 
-    //if(compareTag(tag, tag_1a) || compareTag(tag, tag_1b) || compareTag(tag, tag_1c) || compareTag(tag, tag_1d) || compareTag(tag, tag_1e) 
-      //|| compareTag(tag, tag_2a) || compareTag(tag, tag_2b) || compareTag(tag, tag_2c) || compareTag(tag, tag_2d) || compareTag(tag, tag_2e) 
-      //|| compareTag(tag, tag_4a) || compareTag(tag, tag_4b) || compareTag(tag, tag_4c) || compareTag(tag, tag_4d) || compareTag(tag, tag_4e) 
-     // || compareTag(tag, tag_5a) || compareTag(tag, tag_5b) || compareTag(tag, tag_5c) || compareTag(tag, tag_5d) || compareTag(tag, tag_5e)) 
      {  // if wrong, do this
       turnLedRed();
       bad++;
@@ -233,10 +222,6 @@ switch (BIN_NO) {
       if (DEBUG) printScore();
       sendResults(good);
     }else 
-    //if(compareTag(tag, tag_1a) || compareTag(tag, tag_1b) || compareTag(tag, tag_1c) || compareTag(tag, tag_1d) || compareTag(tag, tag_1e) 
-     // || compareTag(tag, tag_2a) || compareTag(tag, tag_2b) || compareTag(tag, tag_2c) || compareTag(tag, tag_2d) || compareTag(tag, tag_2e) 
-     // || compareTag(tag, tag_3a) || compareTag(tag, tag_3b) || compareTag(tag, tag_3c) || compareTag(tag, tag_3d) || compareTag(tag, tag_3e) 
-     // || compareTag(tag, tag_5a) || compareTag(tag, tag_5b) || compareTag(tag, tag_5c) || compareTag(tag, tag_5d) || compareTag(tag, tag_5e)) 
      {   // if wrong, do this
       turnLedRed();
       bad++;
@@ -257,10 +242,6 @@ switch (BIN_NO) {
       if (DEBUG) printScore();
       sendResults(good);
     }else 
-    //if(compareTag(tag, tag_1a) || compareTag(tag, tag_1b) || compareTag(tag, tag_1c) || compareTag(tag, tag_1d) || compareTag(tag, tag_1e) 
-      //|| compareTag(tag, tag_2a) || compareTag(tag, tag_2b) || compareTag(tag, tag_2c) || compareTag(tag, tag_2d) || compareTag(tag, tag_2e) 
-      //|| compareTag(tag, tag_3a) || compareTag(tag, tag_3b) || compareTag(tag, tag_3c) || compareTag(tag, tag_3d) || compareTag(tag, tag_3e) 
-      //|| compareTag(tag, tag_4a) || compareTag(tag, tag_4b) || compareTag(tag, tag_4c) || compareTag(tag, tag_4d) || compareTag(tag, tag_4e)) 
       {  // if wrong, do this
       turnLedRed();
       bad++;
@@ -314,42 +295,9 @@ void sendResults(int results) {
   // MOSI will go HIGH when master accesses
   digitalWrite(MISO_PIN, HIGH);           // again for safety
   if (COMM_DEBUG) Serial.println("2 MOSI queried HIGH -- MISO set LOW"); 
+  delay(10);
   digitalWrite(MISO_PIN, LOW);            // Notify master READY
-  while (digitalRead(MOSI_PIN) == HIGH) { // wait for ACK from master
-    // MOSI will go LOW when master ACK
-    if (COMM_DEBUG) Serial.println("3 waiting MOSI LOW (ack)"); 
-    if(millis() > turnoff) {              // timeout if Master not running
-      turnLedOff();
-      break;
-    }
-  }  
-  digitalWrite(MISO_PIN, LOW);            // again for safety
 
-/*  // R1.5 simplified communication protocol
-  //while data in buffer . . . 
-  // send first byte
-  if (COMM_DEBUG) Serial.println("4 ACK received, MISO sending DATA HIGH"); 
-  digitalWrite(MISO_PIN, HIGH);           // Set pin HIGH or LOW for data bit
-  // now wait for ACK
-  while (digitalRead(MOSI_PIN) == LOW) {  // wait for master processing
-    // MOSI will go HIGH when master ACK
-    if (COMM_DEBUG) Serial.println("5 waiting MOSI HIGH (ack)"); 
-    // set it again for safety 
-    digitalWrite(MISO_PIN, HIGH);         // Set pin HIGH or LOW for data bit
-    if(millis() > turnoff) {              // timeout if Master not running
-      turnLedOff();
-      break;
-    }
-  }  
-  digitalWrite(MISO_PIN, HIGH);           // again for safety
-  // MOSI will go HIGH when master has received data
-  if (COMM_DEBUG) Serial.println("6 MOSI ACKd our DATA HIGH"); 
-  // . . . no more data to send
-
-  // No more data to send; sleep
-  digitalWrite(MISO_PIN, LOW);            // Set resting state
-  if (COMM_DEBUG) Serial.println("7 MISO resting LOW (idle)"); 
-*/
 }
 
 void turnLedGreen() {
